@@ -624,3 +624,29 @@ button:disabled {
   background-color: #94a3b8; /* disabled:bg-slate-400 */
   border-color: #64748b; /* disabled:border-slate-500 */
 }
+
+/* --- Styles for Meal Plan Modal Buttons --- */
+.meal-plan-btn {
+  padding: 0.25rem; /* p-1 */
+  border-radius: 9999px; /* rounded-full */
+  color: #ffffff; /* text-white */
+  transition: background-color 150ms;
+  /* Override the default button styles which have larger padding and non-full radius */
+  border: none;
+}
+
+.meal-plan-btn.replace-btn {
+  background-color: #3b82f6; /* bg-blue-500 */
+}
+
+.meal-plan-btn.replace-btn:hover {
+  background-color: #2563eb; /* hover:bg-blue-600 */
+}
+
+.meal-plan-btn.remove-btn {
+  background-color: #ef4444; /* bg-red-500 */
+}
+
+.meal-plan-btn.remove-btn:hover {
+  background-color: #dc2626; /* hover:bg-red-600 */
+}
