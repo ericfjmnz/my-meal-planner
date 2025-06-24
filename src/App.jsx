@@ -18,13 +18,13 @@ export default function App() {
             weeklyLoss: '1',
             heightFt: '',
             heightIn: '',
-            activityLevel: '1.2', // Sedentary/Desk Job
+            activityLevel: '1.2', // Sedentary
         };
     });
 
     const [workouts, setWorkouts] = useState(() => {
         const saved = sessionStorage.getItem('userWorkouts');
-        return saved ? JSON.parse(saved) : [{ type: 'Weightlifting', days: '3', duration: '60' }];
+        return saved ? JSON.parse(saved) : [];
     });
 
     const [macroSplit, setMacroSplit] = useState(() => {
@@ -185,7 +185,7 @@ export default function App() {
         });
     };
 
-    const addWorkout = () => setWorkouts([...workouts, { type: '', days: '1', duration: '30' }]);
+    const addWorkout = () => setWorkouts([...workouts, { type: '', days: '', duration: '' }]);
     const removeWorkout = (index) => setWorkouts(workouts.filter((_, i) => i !== index));
 
     const saveProfile = () => {
@@ -465,17 +465,66 @@ export default function App() {
                         <h2 className="text-xl font-semibold flex items-center"><User className="mr-2 text-blue-600"/>Your Profile & Goals</h2>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div><label className="block text-sm font-medium text-slate-600 mb-1">Date of Birth</label><div className="flex items-center border rounded-lg p-2 bg-slate-50"><Calendar className="w-5 h-5 mr-3 text-slate-500"/><input type="date" name="dob" value={profile.dob} onChange={handleProfileChange} className="w-full bg-transparent focus:outline-none"/></div></div>
-                            <div><label className="block text-sm font-medium text-slate-600 mb-1">Gender</label><div className="flex items-center border rounded-lg p-2 bg-slate-50">{profile.gender === 'female' ? <Venus className="w-5 h-5 mr-3 text-slate-500"/> : <Mars className="w-5 h-5 mr-3 text-slate-500"/>}<select name="gender" value={profile.gender} onChange={handleProfileChange} className="w-full bg-transparent focus:outline-none"><option value="">Select...</option><option value="male">Male</option><option value="female">Female</option></select></div></div>
-                            <div className="sm:col-span-2"><label className="block text-sm font-medium text-slate-600 mb-1">Height</label><div className="flex gap-4"><div className="flex items-center border rounded-lg p-2 bg-slate-50 w-full"><input type="number" name="heightFt" value={profile.heightFt} onChange={handleProfileChange} placeholder="ft" className="w-full bg-transparent focus:outline-none"/></div><div className="flex items-center border rounded-lg p-2 bg-slate-50 w-full"><input type="number" name="heightIn" value={profile.heightIn} onChange={handleProfileChange} placeholder="in" className="w-full bg-transparent focus:outline-none"/></div></div></div>
-                            <div><label className="block text-sm font-medium text-slate-600 mb-1">Current Weight (lbs)</label><div className="flex items-center border rounded-lg p-2 bg-slate-50"><Wrench className="w-5 h-5 mr-3 text-slate-500"/><input type="number" name="currentWeight" value={profile.currentWeight} onChange={handleProfileChange} placeholder="e.g., 180" className="w-full bg-transparent focus:outline-none"/></div></div>
-                            <div><label className="block text-sm font-medium text-slate-600 mb-1">Goal Weight (lbs)</label><div className="flex items-center border rounded-lg p-2 bg-slate-50"><Target className="w-5 h-5 mr-3 text-slate-500"/><input type="number" name="goalWeight" value={profile.goalWeight} onChange={handleProfileChange} placeholder="e.g., 160" className="w-full bg-transparent focus:outline-none"/></div></div>
+                            <div>
+                                <label className="flex items-center text-sm font-medium text-slate-600 mb-1">
+                                    <Calendar className="w-5 h-5 mr-2 text-slate-500"/> Date of Birth
+                                </label>
+                                <input type="date" name="dob" value={profile.dob} onChange={handleProfileChange} className="w-full border rounded-lg p-2 bg-slate-50"/>
+                            </div>
+                            <div>
+                                <label className="flex items-center text-sm font-medium text-slate-600 mb-1">
+                                    {profile.gender === 'female' ? <Venus className="w-5 h-5 mr-2 text-slate-500"/> : <Mars className="w-5 h-5 mr-2 text-slate-500"/>} Gender
+                                </label>
+                                <select name="gender" value={profile.gender} onChange={handleProfileChange} className="w-full border rounded-lg p-2 bg-slate-50">
+                                    <option value="">Select...</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
+                            </div>
+                            <div className="sm:col-span-2">
+                                <label className="block text-sm font-medium text-slate-600 mb-1">Height</label>
+                                <div className="flex gap-4">
+                                    <input type="number" name="heightFt" value={profile.heightFt} onChange={handleProfileChange} placeholder="ft" className="w-full border rounded-lg p-2 bg-slate-50"/>
+                                    <input type="number" name="heightIn" value={profile.heightIn} onChange={handleProfileChange} placeholder="in" className="w-full border rounded-lg p-2 bg-slate-50"/>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="flex items-center text-sm font-medium text-slate-600 mb-1">
+                                    <Wrench className="w-5 h-5 mr-2 text-slate-500"/> Current Weight (lbs)
+                                </label>
+                                <input type="number" name="currentWeight" value={profile.currentWeight} onChange={handleProfileChange} placeholder="e.g., 180" className="w-full border rounded-lg p-2 bg-slate-50"/>
+                            </div>
+                            <div>
+                                <label className="flex items-center text-sm font-medium text-slate-600 mb-1">
+                                    <Target className="w-5 h-5 mr-2 text-slate-500"/> Goal Weight (lbs)
+                                </label>
+                                <input type="number" name="goalWeight" value={profile.goalWeight} onChange={handleProfileChange} placeholder="e.g., 160" className="w-full border rounded-lg p-2 bg-slate-50"/>
+                            </div>
                         </div>
-                         <div><label className="block text-sm font-medium text-slate-600 mb-1">Weekly Weight Loss Goal</label><select name="weeklyLoss" value={profile.weeklyLoss} onChange={handleProfileChange} className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"><option value="0.5">0.5 lbs per week</option><option value="1">1 lb per week</option><option value="1.5">1.5 lbs per week</option><option value="2">2 lbs per week</option></select></div>
+                         <div>
+                            <label className="block text-sm font-medium text-slate-600 mb-1">Weekly Weight Loss Goal</label>
+                            <select name="weeklyLoss" value={profile.weeklyLoss} onChange={handleProfileChange} className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="0.5">0.5 lbs per week</option>
+                                <option value="1">1 lb per week (recommended)</option>
+                                <option value="1.5">1.5 lbs per week</option>
+                                <option value="2">2 lbs per week</option>
+                            </select>
+                        </div>
                         
                         <div className="pt-4 border-t">
                              <h3 className="text-lg font-semibold flex items-center mb-2"><Dumbbell className="mr-2 text-blue-600"/>Activity & Workouts</h3>
-                             <div><label className="block text-sm font-medium text-slate-600 mb-1">Daily Activity Level / Job</label><div className="flex items-center border rounded-lg p-2 bg-slate-50"><Briefcase className="w-5 h-5 mr-3 text-slate-500"/><select name="activityLevel" value={profile.activityLevel} onChange={handleProfileChange} className="w-full bg-transparent focus:outline-none"><option value="1.2">Sedentary</option><option value="1.375">Lightly Active</option><option value="1.55">Moderately Active</option><option value="1.725">Very Active</option><option value="1.9">Extremely Active</option></select></div></div>
+                             <div>
+                                <label className="flex items-center text-sm font-medium text-slate-600 mb-1">
+                                    <Briefcase className="w-5 h-5 mr-2 text-slate-500"/> Daily Activity Level / Job
+                                </label>
+                                <select name="activityLevel" value={profile.activityLevel} onChange={handleProfileChange} className="w-full border rounded-lg p-2 bg-slate-50">
+                                    <option value="1.2">Sedentary</option>
+                                    <option value="1.375">Lightly Active</option>
+                                    <option value="1.55">Moderately Active</option>
+                                    <option value="1.725">Very Active</option>
+                                    <option value="1.9">Extremely Active</option>
+                                </select>
+                            </div>
                              
                              <div className="mt-4 space-y-2">
                                  <div className="grid grid-cols-[1fr,auto,auto,auto] gap-2 items-center text-xs text-slate-500 px-2">
@@ -521,8 +570,14 @@ export default function App() {
                     <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-md space-y-4">
                         <h2 className="text-xl font-semibold flex items-center"><Utensils className="mr-2 text-blue-600"/>Create Your Plan</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div><label className="block text-sm font-medium text-slate-600 mb-1">Meals Per Day</label><select name="mealsPerDay" value={mealPlan.mealsPerDay} onChange={handleMealPlanChange} className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none"><option value="1">One (OMAD)</option><option value="2">Two</option><option value="3">Three</option></select></div>
-                            <div><label className="block text-sm font-medium text-slate-600 mb-1">Number of Days</label><select name="days" value={mealPlan.days} onChange={handleMealPlanChange} className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none">{[...Array(7).keys()].map(i => <option key={i+1} value={i+1}>{i+1} Day(s)</option>)}</select></div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-600 mb-1">Meals Per Day</label>
+                                <select name="mealsPerDay" value={mealPlan.mealsPerDay} onChange={handleMealPlanChange} className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none"><option value="1">One (OMAD)</option><option value="2">Two</option><option value="3">Three</option></select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-600 mb-1">Number of Days</label>
+                                <select name="days" value={mealPlan.days} onChange={handleMealPlanChange} className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none">{[...Array(7).keys()].map(i => <option key={i+1} value={i+1}>{i+1} Day(s)</option>)}</select>
+                            </div>
                         </div>
                         
                         {mealPlan.mealsPerDay === '1' ? (
@@ -536,10 +591,23 @@ export default function App() {
                             </div>
                         )}
                         
-                        <div><label className="block text-sm font-medium text-slate-600 mb-1">Snacks / Beverages (optional)</label><div className="flex items-center border rounded-lg p-2 bg-slate-50"><GlassWater className="w-5 h-5 mr-3 text-slate-500"/><input type="text" name="snackBeveragePreferences" value={mealPlan.snackBeveragePreferences} onChange={handleMealPlanChange} placeholder="e.g., Protein shake, coffee" className="w-full bg-transparent focus:outline-none"/></div></div>
+                        <div>
+                            <label className="flex items-center text-sm font-medium text-slate-600 mb-1">
+                                <GlassWater className="w-5 h-5 mr-2 text-slate-500"/> Snacks / Beverages (optional)
+                            </label>
+                            <input type="text" name="snackBeveragePreferences" value={mealPlan.snackBeveragePreferences} onChange={handleMealPlanChange} placeholder="e.g., Protein shake, coffee" className="w-full border rounded-lg p-2 bg-slate-50"/>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div><label className="block text-sm font-medium text-slate-600 mb-1">Grocery Store</label><input type="text" name="store" value={mealPlan.store} onChange={handleMealPlanChange} placeholder="e.g., Walmart" className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none"/></div>
-                            <div><label className="block text-sm font-medium text-slate-600 mb-1">Budget</label><div className="flex items-center border rounded-lg p-2 bg-slate-50"><DollarSign className="w-5 h-5 mr-3 text-slate-500"/><input type="number" name="budget" value={mealPlan.budget} onChange={handleMealPlanChange} placeholder="e.g., 100" className="w-full bg-transparent focus:outline-none"/></div></div>
+                            <div>
+                                <label className="block text-sm font-medium text-slate-600 mb-1">Grocery Store</label>
+                                <input type="text" name="store" value={mealPlan.store} onChange={handleMealPlanChange} placeholder="e.g., Walmart" className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none"/>
+                            </div>
+                            <div>
+                                <label className="flex items-center text-sm font-medium text-slate-600 mb-1">
+                                    <DollarSign className="w-5 h-5 mr-2 text-slate-500"/> Budget
+                                </label>
+                                <input type="number" name="budget" value={mealPlan.budget} onChange={handleMealPlanChange} placeholder="e.g., 100" className="w-full border rounded-lg p-2 bg-slate-50"/>
+                            </div>
                         </div>
                         {budgetStoreLogicError && <p className="text-xs text-center text-red-500">Please provide both Budget and Store, or leave both empty.</p>}
                         <button onClick={() => generateOrRecalculatePlan()} disabled={isLoading || !isProfileSaved || budgetStoreLogicError} className="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors disabled:bg-slate-400 flex items-center justify-center">{isLoading ? <Loader2 className="animate-spin" /> : 'Generate My Plan!'}</button>
