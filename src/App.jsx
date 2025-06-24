@@ -35,6 +35,8 @@ export default function App() {
     const [isProfileSaved, setIsProfileSaved] = useState(() => {
         return sessionStorage.getItem('isProfileSaved') === 'true';
     });
+
+    const [isProfileComplete, setIsProfileComplete] = useState(false);
     
     // Calculated Goals State
     const [nutritionGoals, setNutritionGoals] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
@@ -70,6 +72,8 @@ export default function App() {
     // --- Effects to save state to sessionStorage ---
     useEffect(() => {
         sessionStorage.setItem('userProfile', JSON.stringify(profile));
+        const { dob, gender, currentWeight, goalWeight, heightFt, heightIn } = profile;
+        setIsProfileComplete(!!(dob && gender && currentWeight && goalWeight && heightFt && heightIn));
     }, [profile]);
 
     useEffect(() => {
@@ -545,7 +549,7 @@ export default function App() {
                                   <button onClick={addWorkout} className="flex items-center gap-2 text-sm bg-blue-600 text-white hover:bg-blue-700 font-semibold px-3 py-1 rounded-lg"><PlusCircle size={16}/>Add Workout</button>
                              </div>
                         </div>
-                        <button onClick={saveProfile} disabled={isLoading} className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400 flex items-center justify-center">{isLoading ? <Loader2 className="animate-spin" /> : 'Save Profile'}</button>
+                        <button onClick={saveProfile} disabled={!isProfileComplete || isLoading} className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400 flex items-center justify-center">{isLoading ? <Loader2 className="animate-spin" /> : 'Save Profile'}</button>
                     
                         <div className="pt-4 border-t">
                             <h3 className="text-lg font-semibold flex items-center mb-2"><PieChart className="mr-2 text-blue-600"/>Your Daily Nutrition Goals</h3>
