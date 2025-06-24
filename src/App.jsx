@@ -210,7 +210,7 @@ export default function App() {
     };
     
     const callGeminiAPI = async (payload) => {
-        const apiKey = "AIzaSyAsb7lrYNWBzSIUe5RUCOCMib20FzAX61M"; // API Key is handled by the environment
+        const apiKey = ""; // API Key is handled by the environment
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
         const response = await fetch(apiUrl, {
             method: 'POST',
@@ -329,7 +329,10 @@ export default function App() {
                     return acc;
                 }, {});
                 if (!parts.id) parts.id = `ing-${Date.now()}-${index}`;
-                if (parts.name) return { ...parts, price: parseFloat(parts.price) || 0 };
+                if (parts.name) {
+                    const priceValue = parts.price ? parseFloat(String(parts.price).replace(/[^0-9.-]+/g,"")) : 0;
+                    return { ...parts, price: priceValue || 0 };
+                }
                 return null;
             }).filter(Boolean);
 
