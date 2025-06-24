@@ -210,7 +210,7 @@ export default function App() {
     };
     
     const callGeminiAPI = async (payload) => {
-        const apiKey = ""; // API Key is handled by the environment
+        const apiKey = "AIzaSyAsb7lrYNWBzSIUe5RUCOCMib20FzAX61M"; // API Key is handled by the environment
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
         const response = await fetch(apiUrl, {
             method: 'POST',
