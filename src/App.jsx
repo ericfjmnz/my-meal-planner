@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Wrench, User, Utensils, Target, Calendar, Venus, Mars, DollarSign, Loader2, Bot, X, Trash2, Replace, AlertTriangle, Dumbbell, PieChart, PlusCircle, MinusCircle, Briefcase, Cookie, GlassWater, WifiOff } from 'lucide-react';
-
-const appId = 'local-meal-planner';
+import { Wrench, User, Utensils, Target, Calendar, Venus, Mars, DollarSign, Loader2, Bot, X, Trash2, Replace, AlertTriangle, Dumbbell, PieChart, PlusCircle, MinusCircle, Briefcase, GlassWater } from 'lucide-react';
 
 // --- Main App Component ---
+// IMPORTANT: For styles to work, ensure your main entry file (e.g., src/main.jsx or src/index.js)
+// imports the main CSS file like this: `import './index.css';`
+
 export default function App() {
     // --- State Management ---
     // Profile State
@@ -160,7 +161,7 @@ export default function App() {
 
     const saveProfile = () => {
         setIsLoading(true);
-        // Simulate saving
+        // Simulate saving since there's no backend
         setTimeout(() => {
             setIsProfileSaved(true);
             customAlert('Profile confirmed for this session!');
