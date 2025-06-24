@@ -43,7 +43,7 @@ export default function App() {
     const [mealPlan, setMealPlan] = useState({ 
         mealsPerDay: '1', 
         days: '5', 
-        mealName: 'Chicken Marsala', 
+        mealName: '', 
         mealName2: '',
         mealName3: '',
         store: '', 
