@@ -1,6 +1,86 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Wrench, User, Utensils, Target, Calendar, Venus, Mars, DollarSign, Loader2, Bot, X, Trash2, Replace, AlertTriangle, Dumbbell, PieChart, PlusCircle, MinusCircle, Briefcase, GlassWater, FileDown, ChevronLeft, ChevronRight } from 'lucide-react';
 
+// --- Custom DatePicker Component ---
+const DatePicker = ({ value, onChange }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [currentDate, setCurrentDate] = useState(value ? new Date(value) : new Date());
+    const datePickerRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const daysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+    const firstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
+
+    const handleDateSelect = (day) => {
+        const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+        onChange({ target: { name: 'dob', value: newDate.toISOString().split('T')[0] } });
+        setIsOpen(false);
+    };
+
+    const renderDays = () => {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const totalDays = daysInMonth(year, month);
+        const firstDay = firstDayOfMonth(year, month);
+        const blanks = Array(firstDay).fill(null);
+        const days = Array.from({ length: totalDays }, (_, i) => i + 1);
+        const selectedDate = value ? new Date(value) : null;
+
+        return (
+            <div className="grid grid-cols-7 gap-1 text-center">
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <div key={d} className="font-bold text-xs text-slate-500">{d}</div>)}
+                {blanks.map((_, i) => <div key={`blank-${i}`}></div>)}
+                {days.map(day => {
+                    const isSelected = selectedDate && selectedDate.getDate() === day && selectedDate.getMonth() === month && selectedDate.getFullYear() === year;
+                    return (
+                        <div key={day}
+                            onClick={() => handleDateSelect(day)}
+                            className={`p-1 rounded-full cursor-pointer hover:bg-blue-200 ${isSelected ? 'bg-blue-500 text-white' : ''}`}>
+                            {day}
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
+
+    return (
+        <div className="relative" ref={datePickerRef}>
+            <div className="flex items-center border rounded-lg p-2 bg-slate-50 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
+                <Calendar className="w-5 h-5 mr-2 text-slate-500" />
+                <input
+                    type="text"
+                    readOnly
+                    value={value || 'Select a date'}
+                    className="w-full bg-transparent focus:outline-none cursor-pointer"
+                />
+            </div>
+            {isOpen && (
+                <div className="absolute z-10 mt-1 w-64 bg-white border rounded-lg shadow-lg p-2">
+                     <div className="flex justify-between items-center mb-2">
+                        <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))} className="p-1 rounded-full hover:bg-slate-200"><ChevronLeft size={16}/></button>
+                        <span className="font-semibold text-sm">
+                            {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                        </span>
+                        <button onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))} className="p-1 rounded-full hover:bg-slate-200"><ChevronRight size={16}/></button>
+                    </div>
+                    {renderDays()}
+                </div>
+            )}
+        </div>
+    );
+};
+
+
 // --- Main App Component ---
 export default function App() {
     // --- State Management ---
@@ -328,7 +408,8 @@ export default function App() {
             }
 
             const groceryList = groceryListText.split('\n').map((line, index) => {
-                const parts = line.split(';').reduce((acc, part) => {
+                 const standardizedLine = line.replace(/,/g, ';');
+                const parts = standardizedLine.split(';').reduce((acc, part) => {
                     const [key, ...value] = part.split(':');
                     if (key && value.length > 0) acc[key.trim()] = value.join(':').trim();
                     return acc;
