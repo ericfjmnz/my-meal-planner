@@ -242,7 +242,7 @@ export default function App() {
         const { mealsPerDay, days, mealName, mealName2, mealName3, store, budget, snackBeveragePreferences } = mealPlan;
         const age = dob ? new Date().getFullYear() - new Date(dob).getFullYear() : 30;
         
-        const activityLevelText = { '1.2': 'Sedentary (desk job)', '1.375': 'Lightly Active', '1.55': 'Moderately Active', '1.725': 'Very Active', '1.9': 'Extremely Active' };
+        const activityLevelText = { '1.2': 'Sedentary', '1.375': 'Lightly Active', '1.55': 'Moderately Active', '1.725': 'Very Active', '1.9': 'Extremely Active' };
         const workoutsDescription = workouts.map(w => {
             if (!w.type) return '';
             const daysText = `${w.days} day${w.days > 1 ? 's' : ''}/week`;
