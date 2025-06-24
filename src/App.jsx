@@ -1,42 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
 import { Wrench, User, Utensils, Target, Calendar, Venus, Mars, DollarSign, Loader2, Bot, X, Trash2, Replace, AlertTriangle, Dumbbell, PieChart, PlusCircle, MinusCircle, Briefcase, Cookie, GlassWater, WifiOff } from 'lucide-react';
 
-// --- Firebase Configuration ---
-// For local development with a .env file
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID
-};
-
-const appId = 'vite-meal-planner';
-
-// A small component to show a clear error message if Firebase is not configured.
-function MissingFirebaseConfig() {
-    return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-slate-100 text-slate-700 p-8">
-            <WifiOff size={64} className="text-red-500 mb-4" />
-            <h1 className="text-2xl font-bold mb-2">Configuration Error</h1>
-            <p className="text-center max-w-md">
-                The Firebase connection details are missing. If you are running this locally, please ensure you have a `.env` file with your `VITE_FIREBASE_...` variables. If this is deployed, please check that the environment variables have been set correctly in your deployment platform's settings (e.g., Vercel, Netlify).
-            </p>
-        </div>
-    );
-}
+const appId = 'local-meal-planner';
 
 // --- Main App Component ---
 export default function App() {
     // --- State Management ---
-    const [db, setDb] = useState(null);
-    const [userId, setUserId] = useState(null);
-    const [isAuthReady, setIsAuthReady] = useState(false);
-
     // Profile State
     const [profile, setProfile] = useState({ 
         dob: '', 
@@ -81,59 +50,6 @@ export default function App() {
     const [showWarningModal, setShowWarningModal] = useState(false);
     const [warningInfo, setWarningInfo] = useState({ message: '', onConfirm: null });
 
-    // --- Firebase Initialization and Auth ---
-    useEffect(() => {
-        // Only initialize if the config is valid
-        if (firebaseConfig.apiKey) {
-            const app = initializeApp(firebaseConfig);
-            const authInstance = getAuth(app);
-            setDb(getFirestore(app));
-
-            const unsubscribe = onAuthStateChanged(authInstance, async (user) => {
-                if (user) {
-                    setUserId(user.uid);
-                } else {
-                    try {
-                        // Using a generic check for the auth token for broader platform compatibility
-                        const token = window.__initial_auth_token || null;
-                        if (token) {
-                            await signInWithCustomToken(authInstance, token);
-                        } else {
-                            await signInAnonymously(authInstance);
-                        }
-                    } catch (authError) {
-                        console.error("Authentication Error:", authError);
-                        setError("Failed to authenticate.");
-                    }
-                }
-                setIsAuthReady(true);
-            });
-            return () => unsubscribe();
-        } else {
-            // If config is missing, we won't try to initialize Firebase
-            setIsAuthReady(true); 
-        }
-    }, []);
-
-    // --- Firestore Data Fetching ---
-    const fetchProfile = useCallback(async () => {
-        if (isAuthReady && db && userId) {
-            const docRef = doc(db, `artifacts/${appId}/users/${userId}/profile/data`);
-            try {
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    setProfile(prev => ({ ...prev, ...data }));
-                    if(data.workouts && data.workouts.length > 0) setWorkouts(data.workouts);
-                    if(data.macroSplit) setMacroSplit(data.macroSplit);
-                    setIsProfileSaved(true);
-                }
-            } catch (e) { console.error("Error fetching profile: ", e); setError("Could not fetch profile."); }
-        }
-    }, [isAuthReady, db, userId]);
-
-    useEffect(() => { fetchProfile(); }, [fetchProfile]);
-    
     // --- Advanced Nutrition Goals Calculation ---
     useEffect(() => {
         const { dob, gender, currentWeight, weeklyLoss, heightFt, heightIn, activityLevel } = profile;
@@ -242,16 +158,14 @@ export default function App() {
     const addWorkout = () => setWorkouts([...workouts, { type: '', days: '1', duration: '30' }]);
     const removeWorkout = (index) => setWorkouts(workouts.filter((_, i) => i !== index));
 
-    const saveProfile = async () => {
-        if (!db || !userId) { setError("Database not ready."); return; }
+    const saveProfile = () => {
         setIsLoading(true);
-        try {
-            const docRef = doc(db, `artifacts/${appId}/users/${userId}/profile/data`);
-            await setDoc(docRef, { ...profile, workouts, macroSplit }, { merge: true });
+        // Simulate saving
+        setTimeout(() => {
             setIsProfileSaved(true);
-            customAlert('Profile Saved Successfully!');
-        } catch (e) { console.error("Error saving profile: ", e); setError("Failed to save profile."); }
-        finally { setIsLoading(false); }
+            customAlert('Profile confirmed for this session!');
+            setIsLoading(false);
+        }, 500);
     };
 
     const customAlert = (message) => {
@@ -463,14 +377,7 @@ export default function App() {
     };
     
     const budgetStoreLogicError = (mealPlan.budget && !mealPlan.store) || (!mealPlan.budget && mealPlan.store);
-
-    // If Firebase config is missing, render the error message instead of the app.
-    if (!firebaseConfig.apiKey) {
-        return <MissingFirebaseConfig />;
-    }
     
-    if (!isAuthReady) return <div className="flex items-center justify-center min-h-screen bg-slate-50"><Loader2 className="w-12 h-12 animate-spin text-blue-500" /></div>;
-
     return (
         <div className="min-h-screen bg-slate-100 font-sans text-slate-800">
             <div id="alert-box" className="hidden fixed top-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg z-50"><p id="alert-message"></p></div>
@@ -478,7 +385,6 @@ export default function App() {
             <header className="bg-white shadow-sm sticky top-0 z-20">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
                     <div className="flex items-center"><Bot className="w-8 h-8 text-blue-600 mr-3" /><h1 className="text-2xl font-bold text-slate-800 tracking-tight">AI Meal Planner</h1></div>
-                    <div className="text-xs text-slate-400">UserID: {userId}</div>
                 </div>
             </header>
 
