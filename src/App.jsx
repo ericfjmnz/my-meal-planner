@@ -7,20 +7,34 @@ import { Wrench, User, Utensils, Target, Calendar, Venus, Mars, DollarSign, Load
 
 export default function App() {
     // --- State Management ---
-    // Profile State
-    const [profile, setProfile] = useState({ 
-        dob: '', 
-        gender: '', 
-        currentWeight: '', 
-        goalWeight: '', 
-        weeklyLoss: '1',
-        heightFt: '',
-        heightIn: '',
-        activityLevel: '1.2', // Sedentary/Desk Job
+    // Profile, workouts, and macros are now loaded from sessionStorage on initial render.
+    const [profile, setProfile] = useState(() => {
+        const saved = sessionStorage.getItem('userProfile');
+        return saved ? JSON.parse(saved) : { 
+            dob: '', 
+            gender: '', 
+            currentWeight: '', 
+            goalWeight: '', 
+            weeklyLoss: '1',
+            heightFt: '',
+            heightIn: '',
+            activityLevel: '1.2', // Sedentary/Desk Job
+        };
     });
-    const [workouts, setWorkouts] = useState([{ type: 'Weightlifting', days: '3', duration: '60' }]);
-    const [macroSplit, setMacroSplit] = useState({ protein: 30, carbs: 40, fat: 30 });
-    const [isProfileSaved, setIsProfileSaved] = useState(false);
+
+    const [workouts, setWorkouts] = useState(() => {
+        const saved = sessionStorage.getItem('userWorkouts');
+        return saved ? JSON.parse(saved) : [{ type: 'Weightlifting', days: '3', duration: '60' }];
+    });
+
+    const [macroSplit, setMacroSplit] = useState(() => {
+        const saved = sessionStorage.getItem('userMacroSplit');
+        return saved ? JSON.parse(saved) : { protein: 30, carbs: 40, fat: 30 };
+    });
+
+    const [isProfileSaved, setIsProfileSaved] = useState(() => {
+        return sessionStorage.getItem('isProfileSaved') === 'true';
+    });
     
     // Calculated Goals State
     const [nutritionGoals, setNutritionGoals] = useState({ calories: 0, protein: 0, carbs: 0, fat: 0 });
@@ -52,6 +66,19 @@ export default function App() {
     const [newIngredient, setNewIngredient] = useState('');
     const [showWarningModal, setShowWarningModal] = useState(false);
     const [warningInfo, setWarningInfo] = useState({ message: '', onConfirm: null });
+
+    // --- Effects to save state to sessionStorage ---
+    useEffect(() => {
+        sessionStorage.setItem('userProfile', JSON.stringify(profile));
+    }, [profile]);
+
+    useEffect(() => {
+        sessionStorage.setItem('userWorkouts', JSON.stringify(workouts));
+    }, [workouts]);
+
+    useEffect(() => {
+        sessionStorage.setItem('userMacroSplit', JSON.stringify(macroSplit));
+    }, [macroSplit]);
 
     // --- Advanced Nutrition Goals Calculation ---
     useEffect(() => {
@@ -163,8 +190,9 @@ export default function App() {
 
     const saveProfile = () => {
         setIsLoading(true);
-        // Simulate saving since there's no backend
+        // Set flag in session storage
         setTimeout(() => {
+            sessionStorage.setItem('isProfileSaved', 'true');
             setIsProfileSaved(true);
             customAlert('Profile confirmed for this session!');
             setIsLoading(false);
@@ -182,7 +210,7 @@ export default function App() {
     };
     
     const callGeminiAPI = async (payload) => {
-        const apiKey = "AIzaSyAsb7lrYNWBzSIUe5RUCOCMib20FzAX61M"; 
+        const apiKey = ""; // API Key is handled by the environment
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
         const response = await fetch(apiUrl, {
             method: 'POST',
@@ -434,11 +462,11 @@ export default function App() {
                         <h2 className="text-xl font-semibold flex items-center"><User className="mr-2 text-blue-600"/>Your Profile & Goals</h2>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                           <div><label className="block text-sm font-medium text-slate-600 mb-1">Date of Birth</label><div className="flex items-center border rounded-lg p-2 bg-slate-50"><Calendar className="w-5 h-5 mr-3 text-slate-500"/><input type="date" name="dob" value={profile.dob} onChange={handleProfileChange} className="w-full bg-transparent focus:outline-none"/></div></div>
-                           <div><label className="block text-sm font-medium text-slate-600 mb-1">Gender</label><div className="flex items-center border rounded-lg p-2 bg-slate-50">{profile.gender === 'female' ? <Venus className="w-5 h-5 mr-3 text-slate-500"/> : <Mars className="w-5 h-5 mr-3 text-slate-500"/>}<select name="gender" value={profile.gender} onChange={handleProfileChange} className="w-full bg-transparent focus:outline-none"><option value="">Select...</option><option value="male">Male</option><option value="female">Female</option></select></div></div>
-                           <div className="sm:col-span-2"><label className="block text-sm font-medium text-slate-600 mb-1">Height</label><div className="flex gap-4"><div className="flex items-center border rounded-lg p-2 bg-slate-50 w-full"><input type="number" name="heightFt" value={profile.heightFt} onChange={handleProfileChange} placeholder="ft" className="w-full bg-transparent focus:outline-none"/></div><div className="flex items-center border rounded-lg p-2 bg-slate-50 w-full"><input type="number" name="heightIn" value={profile.heightIn} onChange={handleProfileChange} placeholder="in" className="w-full bg-transparent focus:outline-none"/></div></div></div>
-                           <div><label className="block text-sm font-medium text-slate-600 mb-1">Current Weight (lbs)</label><div className="flex items-center border rounded-lg p-2 bg-slate-50"><Wrench className="w-5 h-5 mr-3 text-slate-500"/><input type="number" name="currentWeight" value={profile.currentWeight} onChange={handleProfileChange} placeholder="e.g., 180" className="w-full bg-transparent focus:outline-none"/></div></div>
-                           <div><label className="block text-sm font-medium text-slate-600 mb-1">Goal Weight (lbs)</label><div className="flex items-center border rounded-lg p-2 bg-slate-50"><Target className="w-5 h-5 mr-3 text-slate-500"/><input type="number" name="goalWeight" value={profile.goalWeight} onChange={handleProfileChange} placeholder="e.g., 160" className="w-full bg-transparent focus:outline-none"/></div></div>
+                            <div><label className="block text-sm font-medium text-slate-600 mb-1">Date of Birth</label><div className="flex items-center border rounded-lg p-2 bg-slate-50"><Calendar className="w-5 h-5 mr-3 text-slate-500"/><input type="date" name="dob" value={profile.dob} onChange={handleProfileChange} className="w-full bg-transparent focus:outline-none"/></div></div>
+                            <div><label className="block text-sm font-medium text-slate-600 mb-1">Gender</label><div className="flex items-center border rounded-lg p-2 bg-slate-50">{profile.gender === 'female' ? <Venus className="w-5 h-5 mr-3 text-slate-500"/> : <Mars className="w-5 h-5 mr-3 text-slate-500"/>}<select name="gender" value={profile.gender} onChange={handleProfileChange} className="w-full bg-transparent focus:outline-none"><option value="">Select...</option><option value="male">Male</option><option value="female">Female</option></select></div></div>
+                            <div className="sm:col-span-2"><label className="block text-sm font-medium text-slate-600 mb-1">Height</label><div className="flex gap-4"><div className="flex items-center border rounded-lg p-2 bg-slate-50 w-full"><input type="number" name="heightFt" value={profile.heightFt} onChange={handleProfileChange} placeholder="ft" className="w-full bg-transparent focus:outline-none"/></div><div className="flex items-center border rounded-lg p-2 bg-slate-50 w-full"><input type="number" name="heightIn" value={profile.heightIn} onChange={handleProfileChange} placeholder="in" className="w-full bg-transparent focus:outline-none"/></div></div></div>
+                            <div><label className="block text-sm font-medium text-slate-600 mb-1">Current Weight (lbs)</label><div className="flex items-center border rounded-lg p-2 bg-slate-50"><Wrench className="w-5 h-5 mr-3 text-slate-500"/><input type="number" name="currentWeight" value={profile.currentWeight} onChange={handleProfileChange} placeholder="e.g., 180" className="w-full bg-transparent focus:outline-none"/></div></div>
+                            <div><label className="block text-sm font-medium text-slate-600 mb-1">Goal Weight (lbs)</label><div className="flex items-center border rounded-lg p-2 bg-slate-50"><Target className="w-5 h-5 mr-3 text-slate-500"/><input type="number" name="goalWeight" value={profile.goalWeight} onChange={handleProfileChange} placeholder="e.g., 160" className="w-full bg-transparent focus:outline-none"/></div></div>
                         </div>
                          <div><label className="block text-sm font-medium text-slate-600 mb-1">Weekly Weight Loss Goal</label><select name="weeklyLoss" value={profile.weeklyLoss} onChange={handleProfileChange} className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"><option value="0.5">0.5 lbs per week</option><option value="1">1 lb per week</option><option value="1.5">1.5 lbs per week</option><option value="2">2 lbs per week</option></select></div>
                         
@@ -447,22 +475,22 @@ export default function App() {
                              <div><label className="block text-sm font-medium text-slate-600 mb-1">Daily Activity Level / Job</label><div className="flex items-center border rounded-lg p-2 bg-slate-50"><Briefcase className="w-5 h-5 mr-3 text-slate-500"/><select name="activityLevel" value={profile.activityLevel} onChange={handleProfileChange} className="w-full bg-transparent focus:outline-none"><option value="1.2">Sedentary (desk job)</option><option value="1.375">Lightly Active</option><option value="1.55">Moderately Active</option><option value="1.725">Very Active</option><option value="1.9">Extremely Active</option></select></div></div>
                              
                              <div className="mt-4 space-y-2">
-                                <div className="grid grid-cols-[1fr,auto,auto,auto] gap-2 items-center text-xs text-slate-500 px-2">
-                                    <label>Workout Type</label>
-                                    <label className="text-center w-20">Days/wk</label>
-                                    <label className="text-center w-20">Time</label>
-                                    <span className="w-8"></span> {/* Placeholder for button width */}
-                                </div>
-                                {workouts.map((w, index) => {
-                                    const isDistanceWorkout = w.type.toLowerCase().includes('run') || w.type.toLowerCase().includes('walk') || w.type.toLowerCase().includes('jog');
-                                    return (
-                                     <div key={index} className="grid grid-cols-[1fr,auto,auto,auto] gap-2 items-center">
-                                         <input type="text" name="type" value={w.type} onChange={(e) => handleWorkoutChange(index, e)} placeholder="e.g., Running" className="w-full border rounded-lg p-2 bg-slate-50"/>
-                                         <input type="number" name="days" value={w.days || ''} onChange={(e) => handleWorkoutChange(index, e)} title="Days per week" className="w-20 border rounded-lg p-2 bg-slate-50 text-center"/>
-                                         {isDistanceWorkout ? (<input type="number" name="distance" value={w.distance || ''} onChange={(e) => handleWorkoutChange(index, e)} title="Miles per session" placeholder="miles" className="w-20 border rounded-lg p-2 bg-slate-50 text-center"/>) : (<input type="number" name="duration" value={w.duration || ''} onChange={(e) => handleWorkoutChange(index, e)} title="Minutes per session" placeholder="mins" className="w-20 border rounded-lg p-2 bg-slate-50 text-center"/>)}
-                                         <button onClick={() => removeWorkout(index)} className="text-red-500 hover:text-red-700 justify-self-center"><MinusCircle/></button>
-                                     </div>)})}
-                                 <button onClick={addWorkout} className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-semibold"><PlusCircle size={16}/>Add Workout</button>
+                                 <div className="grid grid-cols-[1fr,auto,auto,auto] gap-2 items-center text-xs text-slate-500 px-2">
+                                     <label>Workout Type</label>
+                                     <label className="text-center w-20">Days/wk</label>
+                                     <label className="text-center w-20">Time</label>
+                                     <span className="w-8"></span> {/* Placeholder for button width */}
+                                 </div>
+                                 {workouts.map((w, index) => {
+                                     const isDistanceWorkout = w.type.toLowerCase().includes('run') || w.type.toLowerCase().includes('walk') || w.type.toLowerCase().includes('jog');
+                                     return (
+                                      <div key={index} className="grid grid-cols-[1fr,auto,auto,auto] gap-2 items-center">
+                                           <input type="text" name="type" value={w.type} onChange={(e) => handleWorkoutChange(index, e)} placeholder="e.g., Running" className="w-full border rounded-lg p-2 bg-slate-50"/>
+                                           <input type="number" name="days" value={w.days || ''} onChange={(e) => handleWorkoutChange(index, e)} title="Days per week" className="w-20 border rounded-lg p-2 bg-slate-50 text-center"/>
+                                           {isDistanceWorkout ? (<input type="number" name="distance" value={w.distance || ''} onChange={(e) => handleWorkoutChange(index, e)} title="Miles per session" placeholder="miles" className="w-20 border rounded-lg p-2 bg-slate-50 text-center"/>) : (<input type="number" name="duration" value={w.duration || ''} onChange={(e) => handleWorkoutChange(index, e)} title="Minutes per session" placeholder="mins" className="w-20 border rounded-lg p-2 bg-slate-50 text-center"/>)}
+                                           <button onClick={() => removeWorkout(index)} className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600 justify-self-center"><MinusCircle size={16}/></button>
+                                       </div>)})}
+                                  <button onClick={addWorkout} className="flex items-center gap-2 text-sm bg-blue-600 text-white hover:bg-blue-700 font-semibold px-3 py-1 rounded-lg"><PlusCircle size={16}/>Add Workout</button>
                              </div>
                         </div>
                         <button onClick={saveProfile} disabled={isLoading} className="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-slate-400 flex items-center justify-center">{isLoading ? <Loader2 className="animate-spin" /> : 'Save Profile'}</button>
@@ -490,8 +518,8 @@ export default function App() {
                     <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-md space-y-4">
                         <h2 className="text-xl font-semibold flex items-center"><Utensils className="mr-2 text-blue-600"/>Create Your Plan</h2>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                           <div><label className="block text-sm font-medium text-slate-600 mb-1">Meals Per Day</label><select name="mealsPerDay" value={mealPlan.mealsPerDay} onChange={handleMealPlanChange} className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none"><option value="1">One (OMAD)</option><option value="2">Two</option><option value="3">Three</option></select></div>
-                           <div><label className="block text-sm font-medium text-slate-600 mb-1">Number of Days</label><select name="days" value={mealPlan.days} onChange={handleMealPlanChange} className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none">{[...Array(7).keys()].map(i => <option key={i+1} value={i+1}>{i+1} Day(s)</option>)}</select></div>
+                            <div><label className="block text-sm font-medium text-slate-600 mb-1">Meals Per Day</label><select name="mealsPerDay" value={mealPlan.mealsPerDay} onChange={handleMealPlanChange} className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none"><option value="1">One (OMAD)</option><option value="2">Two</option><option value="3">Three</option></select></div>
+                            <div><label className="block text-sm font-medium text-slate-600 mb-1">Number of Days</label><select name="days" value={mealPlan.days} onChange={handleMealPlanChange} className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none">{[...Array(7).keys()].map(i => <option key={i+1} value={i+1}>{i+1} Day(s)</option>)}</select></div>
                         </div>
                         
                         {mealPlan.mealsPerDay === '1' ? (
@@ -507,8 +535,8 @@ export default function App() {
                         
                         <div><label className="block text-sm font-medium text-slate-600 mb-1">Snacks / Beverages (optional)</label><div className="flex items-center border rounded-lg p-2 bg-slate-50"><GlassWater className="w-5 h-5 mr-3 text-slate-500"/><input type="text" name="snackBeveragePreferences" value={mealPlan.snackBeveragePreferences} onChange={handleMealPlanChange} placeholder="e.g., Protein shake, coffee" className="w-full bg-transparent focus:outline-none"/></div></div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                           <div><label className="block text-sm font-medium text-slate-600 mb-1">Grocery Store</label><input type="text" name="store" value={mealPlan.store} onChange={handleMealPlanChange} placeholder="e.g., Walmart" className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none"/></div>
-                           <div><label className="block text-sm font-medium text-slate-600 mb-1">Budget</label><div className="flex items-center border rounded-lg p-2 bg-slate-50"><DollarSign className="w-5 h-5 mr-3 text-slate-500"/><input type="number" name="budget" value={mealPlan.budget} onChange={handleMealPlanChange} placeholder="e.g., 100" className="w-full bg-transparent focus:outline-none"/></div></div>
+                            <div><label className="block text-sm font-medium text-slate-600 mb-1">Grocery Store</label><input type="text" name="store" value={mealPlan.store} onChange={handleMealPlanChange} placeholder="e.g., Walmart" className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none"/></div>
+                            <div><label className="block text-sm font-medium text-slate-600 mb-1">Budget</label><div className="flex items-center border rounded-lg p-2 bg-slate-50"><DollarSign className="w-5 h-5 mr-3 text-slate-500"/><input type="number" name="budget" value={mealPlan.budget} onChange={handleMealPlanChange} placeholder="e.g., 100" className="w-full bg-transparent focus:outline-none"/></div></div>
                         </div>
                         {budgetStoreLogicError && <p className="text-xs text-center text-red-500">Please provide both Budget and Store, or leave both empty.</p>}
                         <button onClick={() => generateOrRecalculatePlan()} disabled={isLoading || !isProfileSaved || budgetStoreLogicError} className="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors disabled:bg-slate-400 flex items-center justify-center">{isLoading ? <Loader2 className="animate-spin" /> : 'Generate My Plan!'}</button>
