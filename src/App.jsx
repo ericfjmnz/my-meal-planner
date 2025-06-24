@@ -2,16 +2,37 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'firebase/auth';
 import { getFirestore, doc, setDoc, getDoc } from 'firebase/firestore';
-import { Wrench, User, Utensils, Target, Calendar, Venus, Mars, DollarSign, Loader2, Bot, X, Trash2, Replace, AlertTriangle, Dumbbell, PieChart, PlusCircle, MinusCircle, Briefcase, Cookie, GlassWater } from 'lucide-react';
+import { Wrench, User, Utensils, Target, Calendar, Venus, Mars, DollarSign, Loader2, Bot, X, Trash2, Replace, AlertTriangle, Dumbbell, PieChart, PlusCircle, MinusCircle, Briefcase, Cookie, GlassWater, WifiOff } from 'lucide-react';
 
 // --- Firebase Configuration ---
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+// For local development with a .env file
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
+};
+
+const appId = 'vite-meal-planner';
+
+// A small component to show a clear error message if Firebase is not configured.
+function MissingFirebaseConfig() {
+    return (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-slate-100 text-slate-700 p-8">
+            <WifiOff size={64} className="text-red-500 mb-4" />
+            <h1 className="text-2xl font-bold mb-2">Configuration Error</h1>
+            <p className="text-center max-w-md">
+                The Firebase connection details are missing. If you are running this locally, please ensure you have a `.env` file with your `VITE_FIREBASE_...` variables. If this is deployed, please check that the environment variables have been set correctly in your deployment platform's settings (e.g., Vercel, Netlify).
+            </p>
+        </div>
+    );
+}
 
 // --- Main App Component ---
 export default function App() {
     // --- State Management ---
-    const [auth, setAuth] = useState(null);
     const [db, setDb] = useState(null);
     const [userId, setUserId] = useState(null);
     const [isAuthReady, setIsAuthReady] = useState(false);
@@ -60,39 +81,39 @@ export default function App() {
     const [showWarningModal, setShowWarningModal] = useState(false);
     const [warningInfo, setWarningInfo] = useState({ message: '', onConfirm: null });
 
-    // --- Firebase Initialization ---
+    // --- Firebase Initialization and Auth ---
     useEffect(() => {
-        if (Object.keys(firebaseConfig).length > 0) {
+        // Only initialize if the config is valid
+        if (firebaseConfig.apiKey) {
             const app = initializeApp(firebaseConfig);
-            setAuth(getAuth(app));
+            const authInstance = getAuth(app);
             setDb(getFirestore(app));
+
+            const unsubscribe = onAuthStateChanged(authInstance, async (user) => {
+                if (user) {
+                    setUserId(user.uid);
+                } else {
+                    try {
+                        // Using a generic check for the auth token for broader platform compatibility
+                        const token = window.__initial_auth_token || null;
+                        if (token) {
+                            await signInWithCustomToken(authInstance, token);
+                        } else {
+                            await signInAnonymously(authInstance);
+                        }
+                    } catch (authError) {
+                        console.error("Authentication Error:", authError);
+                        setError("Failed to authenticate.");
+                    }
+                }
+                setIsAuthReady(true);
+            });
+            return () => unsubscribe();
         } else {
-            setError("Firebase configuration is missing.");
+            // If config is missing, we won't try to initialize Firebase
+            setIsAuthReady(true); 
         }
     }, []);
-
-    // --- Auth State Change Listener ---
-    useEffect(() => {
-        if (!auth) return;
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                setUserId(user.uid);
-            } else {
-                try {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                } catch (authError) {
-                    console.error("Authentication Error:", authError);
-                    setError("Failed to authenticate.");
-                }
-            }
-            setIsAuthReady(true);
-        });
-        return () => unsubscribe();
-    }, [auth]);
 
     // --- Firestore Data Fetching ---
     const fetchProfile = useCallback(async () => {
@@ -109,7 +130,7 @@ export default function App() {
                 }
             } catch (e) { console.error("Error fetching profile: ", e); setError("Could not fetch profile."); }
         }
-    }, [isAuthReady, db, userId, appId]);
+    }, [isAuthReady, db, userId]);
 
     useEffect(() => { fetchProfile(); }, [fetchProfile]);
     
@@ -443,6 +464,11 @@ export default function App() {
     
     const budgetStoreLogicError = (mealPlan.budget && !mealPlan.store) || (!mealPlan.budget && mealPlan.store);
 
+    // If Firebase config is missing, render the error message instead of the app.
+    if (!firebaseConfig.apiKey) {
+        return <MissingFirebaseConfig />;
+    }
+    
     if (!isAuthReady) return <div className="flex items-center justify-center min-h-screen bg-slate-50"><Loader2 className="w-12 h-12 animate-spin text-blue-500" /></div>;
 
     return (
