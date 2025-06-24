@@ -303,7 +303,7 @@ button {
   -moz-appearance: none;
   appearance: none;
   background-color: transparent;
-  border: none;
+  /* border: none; <- This was removed to allow default borders */
   padding: 0;
   margin: 0;
   font-family: inherit;
@@ -623,6 +623,18 @@ button:disabled {
   background-color: #94a3b8; /* disabled:bg-slate-400 */
   border-color: #64748b; /* disabled:border-slate-500 */
 }
+
+/* --- DEFAULT INPUT STYLES --- */
+input[type='text'],
+input[type='number'],
+input[type='date'],
+select,
+textarea {
+  border-width: 1px;
+  border-color: #000000;
+  padding: 0.5rem;
+}
+
 
 /* --- Styles for Meal Plan Modal Buttons --- */
 .meal-plan-btn {
