@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Wrench, User, Utensils, Target, Calendar, Venus, Mars, DollarSign, Loader2, Bot, X, Trash2, Replace, AlertTriangle, Dumbbell, PieChart, PlusCircle, MinusCircle, Briefcase, GlassWater } from 'lucide-react';
+import { Wrench, User, Utensils, Target, Calendar, Venus, Mars, DollarSign, Loader2, Bot, X, Trash2, Replace, AlertTriangle, Dumbbell, PieChart, PlusCircle, MinusCircle, Briefcase, GlassWater, FileDown } from 'lucide-react';
 
 // --- Main App Component ---
 // IMPORTANT: For styles to work, ensure your main entry file (e.g., src/main.jsx or src/index.js)
@@ -43,6 +43,8 @@ export default function App() {
     const [showPlanModal, setShowPlanModal] = useState(false);
     const [apiResponse, setApiResponse] = useState(null);
     const [error, setError] = useState('');
+    const [isDownloading, setIsDownloading] = useState(false);
+
 
     // Ingredient editing state
     const [showReplaceModal, setShowReplaceModal] = useState(false);
@@ -180,7 +182,7 @@ export default function App() {
     };
     
     const callGeminiAPI = async (payload) => {
-        const apiKey = "AIzaSyAsb7lrYNWBzSIUe5RUCOCMib20FzAX61M"; 
+        const apiKey = ""; // Leave empty
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
         const response = await fetch(apiUrl, {
             method: 'POST',
@@ -377,6 +379,42 @@ export default function App() {
         }
     };
     
+    const loadScript = (src) => {
+        return new Promise((resolve, reject) => {
+            if (document.querySelector(`script[src="${src}"]`)) {
+                resolve();
+                return;
+            }
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+            document.body.appendChild(script);
+        });
+    };
+
+    const handleDownloadPDF = async () => {
+        setIsDownloading(true);
+        setError('');
+        try {
+            await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js');
+            const element = document.getElementById('plan-to-print');
+            const opt = {
+                margin:       0.5,
+                filename:     'MyMealPlan.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            await html2pdf().from(element).set(opt).save();
+        } catch (e) {
+            console.error('Download error:', e);
+            setError('Could not download PDF. Please try again.');
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+    
     const budgetStoreLogicError = (mealPlan.budget && !mealPlan.store) || (!mealPlan.budget && mealPlan.store);
     
     return (
@@ -480,13 +518,13 @@ export default function App() {
             </main>
 
             {/* --- Modals --- */}
-            {showPlanModal && apiResponse && ( <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-30 p-4"> <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col"> <div className="p-4 border-b flex justify-between items-center"><h3 className="text-lg font-bold">Your AI-Curated Meal Plan</h3><button onClick={() => setShowPlanModal(false)} className="p-1 rounded-full hover:bg-slate-200"><X className="w-5 h-5"/></button></div> <div className="p-6 overflow-y-auto relative"> {isRecalculating && <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10"><Loader2 className="w-8 h-8 animate-spin text-blue-600"/></div>} <div className="prose lg:prose-lg max-w-none"> <p>{apiResponse.planSummary}</p> 
+            {showPlanModal && apiResponse && ( <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-30 p-4"> <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col"> <div className="p-4 border-b flex justify-between items-center"><h3 className="text-lg font-bold">Your AI-Curated Meal Plan</h3><button onClick={() => setShowPlanModal(false)} className="p-1 rounded-full hover:bg-slate-200"><X className="w-5 h-5"/></button></div> <div className="p-6 overflow-y-auto relative" id="plan-to-print"> {isRecalculating && <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10"><Loader2 className="w-8 h-8 animate-spin text-blue-600"/></div>} <div className="prose lg:prose-lg max-w-none"> <p>{apiResponse.planSummary}</p> 
             {mealPlan.budget && apiResponse.totalCost > mealPlan.budget && (
                 <p className="text-red-600 font-bold my-2">
                     Note: This plan exceeds your specified budget of ${mealPlan.budget}, but it's the most affordable option found that meets your nutritional goals.
                 </p>
             )}
-            <h3>Grocery List (Total Est: ${apiResponse.totalCost?.toFixed(2)})</h3> <ul className="list-none p-0"> {apiResponse.groceryList?.map(ing => ( <li key={ing.id} className="flex items-center justify-between p-2 border-b"> <span>{ing.name} ({ing.quantity}) - <strong>${ing.price?.toFixed(2)}</strong></span> <div className="flex items-center gap-2"> <button onClick={() => handleStartReplace(ing)} title="Replace" className="p-1 text-blue-600 hover:text-blue-800"><Replace size={18}/></button> <button onClick={() => handleRemoveIngredient(ing.id)} title="Remove" className="p-1 text-red-600 hover:text-red-800"><Trash2 size={18}/></button> </div> </li> ))} </ul> <h3>Instructions</h3> <p dangerouslySetInnerHTML={{ __html: apiResponse.instructions?.replace(/###/g, '<h3>').replace(/\n/g, '<br/>') }} /> <h3>Nutrition Info (Est. per day)</h3> <p dangerouslySetInnerHTML={{ __html: apiResponse.nutrition?.details.replace(/###/g, '<h3>') }}/> </div> </div> <div className="p-4 border-t bg-slate-50 rounded-b-xl text-right"><button onClick={() => setShowPlanModal(false)} className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">Close</button></div> </div> </div> )}
+            <h3>Grocery List (Total Est: ${apiResponse.totalCost?.toFixed(2)})</h3> <ul className="list-none p-0"> {apiResponse.groceryList?.map(ing => ( <li key={ing.id} className="flex items-center justify-between p-2 border-b"> <span>{ing.name} ({ing.quantity}) - <strong>${ing.price?.toFixed(2)}</strong></span> <div className="flex items-center gap-2"> <button onClick={() => handleStartReplace(ing)} title="Replace" className="p-1 text-blue-600 hover:text-blue-800"><Replace size={18}/></button> <button onClick={() => handleRemoveIngredient(ing.id)} title="Remove" className="p-1 text-red-600 hover:text-red-800"><Trash2 size={18}/></button> </div> </li> ))} </ul> <h3>Instructions</h3> <p dangerouslySetInnerHTML={{ __html: apiResponse.instructions?.replace(/###/g, '<h3>').replace(/\n/g, '<br/>') }} /> <h3>Nutrition Info (Est. per day)</h3> <p dangerouslySetInnerHTML={{ __html: apiResponse.nutrition?.details.replace(/###/g, '<h3>') }}/> </div> </div> <div className="p-4 border-t bg-slate-50 rounded-b-xl flex justify-end gap-3"><button onClick={handleDownloadPDF} disabled={isDownloading} className="bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors disabled:bg-slate-400 flex items-center gap-2">{isDownloading ? <Loader2 className="animate-spin"/> : <FileDown size={18}/>} Download PDF</button><button onClick={() => setShowPlanModal(false)} className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">Close</button></div> </div> </div> )}
             {showReplaceModal && ( <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4"> <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm"> <h3 className="p-4 border-b font-semibold">Replace '{ingredientToReplace?.name}'</h3> <div className="p-4 space-y-2"> <label className="text-sm font-medium">Replace with:</label> <input type="text" value={newIngredient} onChange={(e) => setNewIngredient(e.target.value)} placeholder="e.g., 'Ground Beef'" className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"/> </div> <div className="p-4 flex justify-end gap-3 bg-slate-50 rounded-b-xl"> <button onClick={() => setShowReplaceModal(false)} className="bg-slate-200 text-slate-800 font-bold py-2 px-4 rounded-lg hover:bg-slate-300">Cancel</button> <button onClick={handleConfirmReplace} className="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700">Evaluate</button> </div> </div> </div> )}
             {showWarningModal && ( <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"> <div className="bg-white rounded-xl shadow-2xl w-full max-w-md"> <h3 className="p-4 border-b font-semibold flex items-center gap-2"><AlertTriangle className="text-yellow-500"/>Potential Impact</h3> <div className="p-4"> <p className="text-slate-700">{warningInfo.message}</p> <p className="mt-4 font-semibold">Do you want to continue with this change?</p> </div> <div className="p-4 flex justify-end gap-3 bg-slate-50 rounded-b-xl"> <button onClick={() => setShowWarningModal(false)} className="bg-slate-200 text-slate-800 font-bold py-2 px-4 rounded-lg hover:bg-slate-300">Cancel</button> <button onClick={() => { warningInfo.onConfirm(); setShowWarningModal(false); }} className="bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-700">Continue Anyway</button> </div> </div> </div> )}
         </div>
