@@ -673,13 +673,13 @@ export default function App() {
                         </div>
                         
                         {mealPlan.mealsPerDay === '1' ? (
-                             <div><label className="block text-sm font-medium text-slate-600 mb-1">Main Meal Idea</label><input type="text" name="mealName" value={mealPlan.mealName} onChange={handleMealPlanChange} placeholder="e.g., Salmon and Asparagus" className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none"/></div>
+                             <div><label className="block text-sm font-medium text-slate-600 mb-1">Main Meal Idea</label><input type="text" name="mealName" value={mealPlan.mealName} onChange={handleMealPlanChange} placeholder="e.g., Salmon and Asparagus" spellCheck={true} className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none"/></div>
                         ) : (
                             <div className="space-y-2">
                                 <label className="block text-sm font-medium text-slate-600">Meal Ideas</label>
-                                <input type="text" name="mealName" value={mealPlan.mealName} onChange={handleMealPlanChange} placeholder="Meal 1 Idea" className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none"/>
-                                {mealPlan.mealsPerDay > 1 && <input type="text" name="mealName2" value={mealPlan.mealName2} onChange={handleMealPlanChange} placeholder="Meal 2 Idea" className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none"/>}
-                                {mealPlan.mealsPerDay > 2 && <input type="text" name="mealName3" value={mealPlan.mealName3} onChange={handleMealPlanChange} placeholder="Meal 3 Idea" className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none"/>}
+                                <input type="text" name="mealName" value={mealPlan.mealName} onChange={handleMealPlanChange} placeholder="Meal 1 Idea" spellCheck={true} className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none"/>
+                                {mealPlan.mealsPerDay > 1 && <input type="text" name="mealName2" value={mealPlan.mealName2} onChange={handleMealPlanChange} placeholder="Meal 2 Idea" spellCheck={true} className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none"/>}
+                                {mealPlan.mealsPerDay > 2 && <input type="text" name="mealName3" value={mealPlan.mealName3} onChange={handleMealPlanChange} placeholder="Meal 3 Idea" spellCheck={true} className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none"/>}
                             </div>
                         )}
                         
@@ -687,12 +687,12 @@ export default function App() {
                             <label className="flex items-center text-sm font-medium text-slate-600 mb-1">
                                 <GlassWater className="w-5 h-5 mr-2 text-slate-500"/> Snacks / Beverages (optional)
                             </label>
-                            <input type="text" name="snackBeveragePreferences" value={mealPlan.snackBeveragePreferences} onChange={handleMealPlanChange} placeholder="e.g., Protein shake, coffee" className="w-full border rounded-lg p-2 bg-slate-50"/>
+                            <input type="text" name="snackBeveragePreferences" value={mealPlan.snackBeveragePreferences} onChange={handleMealPlanChange} placeholder="e.g., Protein shake, coffee" spellCheck={true} className="w-full border rounded-lg p-2 bg-slate-50"/>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-slate-600 mb-1">Grocery Store</label>
-                                <input type="text" name="store" value={mealPlan.store} onChange={handleMealPlanChange} placeholder="e.g., Walmart" className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none"/>
+                                <input type="text" name="store" value={mealPlan.store} onChange={handleMealPlanChange} placeholder="e.g., Walmart" spellCheck={true} className="w-full border rounded-lg p-2 bg-slate-50 focus:outline-none"/>
                             </div>
                             <div>
                                 <label className="flex items-center text-sm font-medium text-slate-600 mb-1">
