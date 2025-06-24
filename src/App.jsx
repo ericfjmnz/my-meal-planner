@@ -180,7 +180,7 @@ export default function App() {
     };
     
     const callGeminiAPI = async (payload) => {
-        const apiKey = ""; // Leave empty
+        const apiKey = "AIzaSyAsb7lrYNWBzSIUe5RUCOCMib20FzAX61M"; 
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
         const response = await fetch(apiUrl, {
             method: 'POST',
